@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restaurant QR Order – Menú digital y pedidos en tiempo real</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome (solo los íconos, sin CSS de Bootstrap) -->
+  <script src="https://kit.fontawesome.com/yourkitid.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* --------------------------------------------------------------
+       VARIABLES DE DISEÑO – PALETA DE COLORES
+       -------------------------------------------------------------- */
+    :root {
+      --color-primary: #003366;   /* azul marino */
+      --color-accent:  #FF6600;   /* naranja */
+      --color-bg:      #ffffff;   /* blanco */
+      --color-bg-dark: #f4f9ff;   /* tono claro azul */
+      --color-text:   #212529;   /* gris muy oscuro para legibilidad */
+      --color-white:  #ffffff;
+    }
+
+    /* --------------------------------------------------------------
+       RESETEO BÁSICO
+       -------------------------------------------------------------- */
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* --------------------------------------------------------------
+       TIPOGRAFÍA
+       -------------------------------------------------------------- */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    h1 { font-size: 3.5rem; }
+    h2 { font-size: 2.8rem; }
+    h3 { font-size: 2rem; }
+    .subtitle { font-size: 1.2rem; opacity: .85; }
+
+    /* --------------------------------------------------------------
+       NAVBAR – Fijo, semitransparente, con blur
+       -------------------------------------------------------------- */
+    .navbar {
+      position: fixed;
+      top:0; left:0; right:0;
+      height: 70px;
+      background: rgba(255,255,255,.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0,0,0,.1);
+    }
+    .navbar .logo {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--color-primary);
+    }
+    .navbar .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .navbar .nav-links a {
+      font-weight: 600;
+      color: var(--color-text);
+      transition: color .3s;
+    }
+    .navbar .nav-links a:hover { color: var(--color-accent); }
+
+    /* --------------------------------------------------------------
+       HERO – 80% de la altura de la pantalla
+       -------------------------------------------------------------- */
+    .hero {
+      height: 80vh;
+      min-height: 500px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      color: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      background: url('static/img/imagen_1.jpg') center/cover no-repeat;
+      opacity: .15;
+      mix-blend-mode: overlay;
+    }
+    .hero h1 {
+      font-size: 4rem;
+      text-shadow: 2px 2px 8px rgba(0,0,0,.5);
+      margin-bottom: .5rem;
+    }
+    .hero .subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .hero .cta-btn {
+      background: var(--color-accent);
+      color: var(--color-white);
+      border: none;
+      padding: .9rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .hero .cta-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,.2);
+    }
+
+    /* --------------------------------------------------------------
+       SECCIONES GENERALES
+       -------------------------------------------------------------- */
+    section {
+      padding: 4rem 1.5rem;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .grid {
+      display: grid;
+      gap: 2rem;
+    }
+    .grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    /* --------------------------------------------------------------
+       TARJETAS DE SERVICIOS / FUNCIONALIDADES
+       -------------------------------------------------------------- */
+    .card {
+      background: var(--color-bg-dark);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,.07);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 20px rgba(0,0,0,.15);
+    }
+    .card .icon {
+      font-size: 3rem;
+      color: var(--color-accent);
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+    .card h3 {
+      text-align: center;
+      margin: .5rem 0;
+      font-size: 1.6rem;
+    }
+    .card p {
+      padding: 0 1rem 1.5rem;
+      text-align: center;
+      font-size: .95rem;
+      color: #444;
+    }
+
+    /* --------------------------------------------------------------
+       SECCIÓN ESTADÍSTICAS – CONTADORES
+       -------------------------------------------------------------- */
+    .stats {
+      background: var(--color-primary);
+      color: var(--color-white);
+    }
+    .stats .grid-3 { text-align:center; }
+    .stats .counter {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom:.5rem;
+    }
+    .stats .label { font-size:1.1rem; }
+
+    /* --------------------------------------------------------------
+       MODAL – Carrito flotante
+       -------------------------------------------------------------- */
+    .modal-overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.5);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:2000;
+    }
+    .modal {
+      background: var(--color-bg);
+      border-radius:12px;
+      max-width:500px;
+      width:90%;
+      max-height:80vh;
+      overflow:auto;
+      padding:1.5rem;
+      position:relative;
+    }
+    .modal .close {
+      position:absolute;
+      top:10px;
+      right:10px;
+      background:none;
+      border:none;
+      font-size:1.5rem;
+      cursor:pointer;
+      color:#777;
+    }
+    .modal h2 { margin-bottom:1rem; }
+    .cart-item {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:.5rem 0;
+      border-bottom:1px solid #eee;
+    }
+    .cart-item:last-child { border:none; }
+    .cart-item .info { flex:1; }
+    .cart-item .info span { display:block; }
+    .cart-item .qty { width:50px; text-align:center; }
+    .modal .total {
+      font-weight:600;
+      margin-top:1rem;
+      text-align:right;
+    }
+    .modal .actions {
+      display:flex;
+      gap:1rem;
+      margin-top:1.5rem;
+    }
+    .modal .actions button {
+      flex:1;
+      padding:.8rem;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .modal .actions .confirm { background:var(--color-accent); color:#fff; }
+    .modal .actions .cancel { background:#ccc; color:#333; }
+
+    /* --------------------------------------------------------------
+       BOTÓN WHATSAPP FLOTA
+       -------------------------------------------------------------- */
+    .whatsapp-float {
+      position:fixed;
+      bottom:20px;
+      right:20px;
+      background:#25D366;
+      color:#fff;
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,.2);
+      z-index:1500;
+      cursor:pointer;
+      transition: transform .2s;
+    }
+    .whatsapp-float:hover { transform:scale(1.07); }
+
+    /* --------------------------------------------------------------
+       FOOTER
+       -------------------------------------------------------------- */
+    footer {
+      background: var(--color-primary);
+      color: var(--color-white);
+      padding: 2rem 1.5rem;
+      text-align:center;
+    }
+    footer .logo {
+      font-size:1.8rem;
+      font-weight:900;
+      margin-bottom:.5rem;
+    }
+    footer p { margin:.5rem 0; font-size:.9rem; }
+    footer a { color: var(--color-accent); }
+
+    /* --------------------------------------------------------------
+       ANIMACIONES – Fade‑in al hacer scroll
+       -------------------------------------------------------------- */
+    .fade-in {
+      opacity:0;
+      transform:translateY(20px);
+      transition:opacity .6s ease-out, transform .6s ease-out;
+    }
+    .fade-in.visible { opacity:1; transform:none; }
+
+    /* --------------------------------------------------------------
+       RESPONSIVE – Mobile First
+       -------------------------------------------------------------- */
+    @media (min-width:768px) {
+      .hero h1 { font-size:5rem; }
+      .hero .subtitle { font-size:1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">QR‑Order</div>
+    <div class="nav-links">
+      <a href="#funciones">Funciones</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <h1>Menú digital en tu mesa</h1>
+    <p class="subtitle">Escanea, elige, pide. Sin esperas, sin papel.</p>
+    <button class="cta-btn" onclick="scrollToSection('funciones')">Descubre más</button>
+  </section>
+
+  <!-- SECCIÓN DE FUNCIONALIDADES -->
+  <section id="funciones">
+    <h2 class="section-title">Todo lo que puedes hacer</h2>
+    <div class="grid grid-3">
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-qrcode"></i></div>
+        <h3>QR único por mesa</h3>
+        <p>Generamos una URL exclusiva para cada mesa. Cada código lleva al cliente directamente al menú de su ubicación.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-utensils"></i></div>
+        <h3>Catálogo visual</h3>
+        <p>Fotos, descripciones y precios organizados por categorías. Los clientes eligen con confianza.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-shopping-cart"></i></div>
+        <h3>Carrito interactivo</h3>
+        <p>Añade platos, ajusta cantidades y escribe observaciones (sin gluten, sin picante…). Todo en tiempo real.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-sync-alt"></i></div>
+        <h3>Actualización en vivo</h3>
+        <p>Socket.IO muestra el estado del pedido: pendiente → preparando → listo.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-chart-line"></i></div>
+        <h3>Reportes y estadísticas</h3>
+        <p>Exporta ventas a CSV, revisa historial por día o por mesa y mejora la gestión.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-user-shield"></i></div>
+        <h3>Seguridad y roles</h3>
+        <p>Acceso con JWT, roles de admin, camarero y cocinero. Cada quien ve solo lo que necesita.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN ESTADÍSTICAS -->
+  <section class="stats" id="estadisticas">
+    <h2 class="section-title">Nuestros números hablan</h2>
+    <div class="grid grid-3">
+      <div class="fade-in">
+        <div class="counter" data-target="5">0</div>
+        <div class="label">Años de experiencia</div>
+      </div>
+      <div class="fade-in">
+        <div class="counter" data-target="120">0</div>
+        <div class="label">Mesas atendidas</div>
+      </div>
+      <div class="fade-in">
+        <div class="counter" data-target="3500">0</div>
+        <div class="label">Pedidos procesados</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN CÓMO FUNCIONA -->
+  <section id="como-funciona">
+    <h2 class="section-title">Así de simple es usar QR‑Order</h2>
+    <div class="grid grid-3">
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-mobile-alt"></i></div>
+        <h3>1. Escanea el QR</h3>
+        <p>En la mesa encontrarás un código QR. Con tu móvil abre la URL única y accede al menú.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-list"></i></div>
+        <h3>2. Elige tus platos</h3>
+        <p>Navega por categorías, mira fotos y añade los platos que deseas. Puedes indicar notas especiales.</p>
+      </div>
+      <div class="card fade-in">
+        <div class="icon"><i class="fas fa-paper-plane"></i></div>
+        <h3>3. Envía el pedido</h3>
+        <p>Revisa el carrito, confirma y envía. En la cocina el pedido aparecerá al instante.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN GALERÍA DE PLATOS (USANDO LAS IMÁGENES PROPORCIONADAS) -->
+  <section id="galeria">
+    <h2 class="section-title">Sabores que te esperan</h2>
+    <div class="grid grid-3">
+      <div class="card fade-in">
+        <img src="static/img/imagen_2.jpg" alt="Plato 1">
+        <h3>Delicia del Chef</h3>
+        <p>Un plato exquisito con ingredientes frescos y presentación impecable.</p>
+      </div>
+      <div class="card fade-in">
+        <img src="static/img/imagen_3.jpg" alt="Plato 2">
+        <h3>Ensalada Mediterránea</h3>
+        <p>Verduras crujientes, aceitunas negras y aderezo de limón.</p>
+      </div>
+      <div class="card fade-in">
+        <img src="static/img/imagen_4.jpg" alt="Plato 3">
+        <h3>Filete a la Parrilla</h3>
+        <p>Carne jugosa, sazonada a la perfección y acompañada de papas rústicas.</p>
+      </div>
+      <div class="card fade-in">
+        <img src="static/img/imagen_5.jpg" alt="Plato 4">
+        <h3>Postre de Chocolate</h3>
+        <p>Suave mousse de chocolate con toque de menta.</p>
+      </div>
+      <div class="card fade-in">
+        <img src="static/img/imagen_6.jpg" alt="Plato 5">
+        <h3>Sopa del Día</h3>
+        <p>Calienta tu paladar con nuestra sopa casera.</p>
+      </div>
+      <div class="card fade-in">
+        <img src="static/img/imagen_7.jpg" alt="Plato 6">
+        <h3>Pizza Artesanal</h4>
+        <p>Masa fina, salsa de tomate natural y mozzarella fundida.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTÓN DE WHATSAPP FLOTA -->
+  <a href="https://wa.me/[TU WHATSAPP]" class="whatsapp-float" aria-label="WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  <!-- FOOTER -->
+  <footer id="contacto">
+    <div class="logo">QR‑Order</div>
+    <p>Transformamos la experiencia de comer fuera. Menú digital, pedidos al instante.</p>
+    <p>¿Tienes dudas? Escríbenos por <a href="https://wa.me/[TU WHATSAPP]">WhatsApp</a> o <a href="mailto:[TU EMAIL]">correo</a>.</p>
+    <p>&copy; 2024 QR‑Order. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- MODAL DE CARRITO (oculto por defecto) -->
+  <div class="modal-overlay" id="cart-modal">
+    <div class="modal">
+      <button class="close" aria-label="Cerrar">&times;</button>
+      <h2>Tu Carrito</h2>
+      <div id="cart-items">
+        <!-- Items se insertan vía JS -->
+      </div>
+      <div class="total">Total: $<span id="cart-total">0.00</span></div>
+      <div class="actions">
+        <button class="cancel" id="cart-cancel">Cancelar</button>
+        <button class="confirm" id="cart-confirm">Confirmar Pedido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT – INTERACCIONES, ANIMACIONES Y LÓGICA BÁSICA -->
+  <script>
+    /* --------------------------------------------------------------
+       UTILIDADES DE ANIMACIÓN – Fade‑in al hacer scroll
+       -------------------------------------------------------------- */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    /* --------------------------------------------------------------
+       CONTADORES ANIMADOS – Estadísticas
+       -------------------------------------------------------------- */
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+      const target = +counter.dataset.target;
+      let count = 0;
+      const step = Math.ceil(target / 120); // 2 segundos approx.
+      const interval = setInterval(() => {
+        count += step;
+        if(count >= target){
+          counter.textContent = target;
+          clearInterval(interval);
+        } else {
+          counter.textContent = count;
+        }
+      }, 16);
+    });
+
+    /* --------------------------------------------------------------
+       SCROLL SUAVE A SECCIONES
+       -------------------------------------------------------------- */
+    function scrollToSection(id){
+      document.getElementById(id).scrollIntoView({behavior:'smooth'});
+    }
+
+    /* --------------------------------------------------------------
+       MODAL DE CARRITO – Simulación de datos
+       -------------------------------------------------------------- */
+    const cartModal = document.getElementById('cart-modal');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalEl = document.getElementById('cart-total');
+
+    // Simulación de carrito (en producción se rellenará vía API)
+    let cart = [
+      {name:'Delicia del Chef', qty:2, price:25.00, notes:'Sin picante'},
+      {name:'Ensalada Mediterránea', qty:1, price:12.50, notes:''}
+    ];
+
+    function renderCart(){
+      cartItemsContainer.innerHTML = '';
+      let total = 0;
+      cart.forEach((item,i) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <div class="info">
+            <span><strong>${item.name}</strong></span>
+            <span>Notas: ${item.notes || 'Ninguna'}</span>
+          </div>
+          <div class="qty">x${item.qty}</div>
+          <div class="price">$${(item.price*item.qty).toFixed(2)}</div>
+        `;
+        cartItemsContainer.appendChild(div);
+        total += item.price * item.qty;
+      });
+      cartTotalEl.textContent = total.toFixed(2);
+    }
+
+    // Abrir modal al pulsar el botón CTA del hero (ejemplo)
+    document.querySelector('.cta-btn').addEventListener('click', () => {
+      renderCart();
+      cartModal.style.display = 'flex';
+    });
+
+    // Cerrar modal
+    document.querySelector('.modal .close').addEventListener('click', () => {
+      cartModal.style.display = 'none';
+    });
+    document.getElementById('cart-cancel').addEventListener('click', () => {
+      cartModal.style.display = 'none';
+    });
+
+    // Confirmar pedido (simulación)
+    document.getElementById('cart-confirm').addEventListener('click', () => {
+      alert('Pedido enviado al backend. ¡Gracias por tu confianza!');
+      cart = []; // vaciar carrito
+      renderCart();
+      cartModal.style.display = 'none';
+    });
+
+    /* --------------------------------------------------------------
+       MENÚ HAMBURGUESA – Versión móvil (simplificado)
+       -------------------------------------------------------------- */
+    // En este ejemplo la barra de navegación es estática; en producción
+    // se añadiría lógica para abrir/cerrar el menú en móviles.
+
+  </script>
+</body>
+</html>
